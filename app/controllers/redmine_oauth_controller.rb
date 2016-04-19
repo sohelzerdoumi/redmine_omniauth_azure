@@ -48,17 +48,24 @@ class RedmineOauthController < AccountController
     session.delete(:back_url)
 
     user = User.find_by_mail(email)
-    if user.new_record?
+    logger.error info
+    info = info[0]
+
+    if user.nil? || user.new_record?
       # Self-registration off
+      if user.nil?
+        user = User.new
+      end
       redirect_to(home_url) && return unless Setting.self_registration?
       # Create on the fly
       user.firstname, user.lastname = info["name"].split(' ') unless info['name'].nil?
       user.firstname ||= info["name"]
       user.lastname ||= info["name"]
       user.mail = email
-      user.login = info['login']
-      user.login ||= [user.firstname, user.lastname]*"."
+      user.login = info['unique_name']
+      # user.login ||= [user.firstname, user.lastname]*"."
       user.random_password
+      user.status = User::STATUS_ACTIVE
       user.register
 
       case Setting.self_registration
@@ -71,7 +78,7 @@ class RedmineOauthController < AccountController
           onthefly_creation_failed(user)
         end
       else
-        register_manually_by_administrator(user) do
+        register_automatically(user) do
           onthefly_creation_failed(user)
         end
       end
@@ -80,7 +87,7 @@ class RedmineOauthController < AccountController
       if user.active?
         successful_authentication(user)
       else
-        account_pending
+        account_pending(user)
       end
     end
   end
