@@ -22,8 +22,8 @@ class RedmineOauthController < AccountController
       token = oauth_client.auth_code.get_token(params[:code], :redirect_uri => oauth_azure_callback_url, :resource => "00000002-0000-0000-c000-000000000000")
       user_info = JWT.decode(token.token, nil, false)
       logger.error user_info
-      
-      email = user_info['unique_name']
+
+      email = user_info[0]['unique_name']
 
       if email
         checked_try_to_login email, user_info
@@ -47,7 +47,7 @@ class RedmineOauthController < AccountController
     params[:back_url] = session[:back_url]
     session.delete(:back_url)
 
-    user = User.find_or_initialize_by_mail(email)
+    user = User.find_by_mail(email)
     if user.new_record?
       # Self-registration off
       redirect_to(home_url) && return unless Setting.self_registration?
