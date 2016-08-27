@@ -1,3 +1,6 @@
+Forked from Gucin/redmine_omniauth_azure which is not maintained anymore.
+
+
 ## Redmine omniauth azure
 
 This plugin is used to authenticate in redmine through Azure.
